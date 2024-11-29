@@ -42,6 +42,8 @@ class MainActivity : ComponentActivity() {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         val joke by viewModel.joke.collectAsState()
+                        val environment by viewModel.environment.collectAsState()
+
                         Image(
                             painter = painterResource(R.drawable.logo_chuck_norris),
                             contentDescription = null
@@ -59,6 +61,16 @@ class MainActivity : ComponentActivity() {
                             onClick = { viewModel.fetchJoke() }
                         ) {
                             Text("Refresh joke")
+                        }
+
+                        Button(
+                            modifier = Modifier.padding(top = 20.dp),
+                            onClick = { viewModel.switchEnvironment() }
+                        ) {
+                            Text("Switch environment for : ${when(environment){
+                                Environment.PROD -> "Mocked"
+                                Environment.MOCKED -> "Prod"
+                            }}")
                         }
 
                     }

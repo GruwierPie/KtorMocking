@@ -43,6 +43,7 @@ private enum class Engine {
 val appModule = module {
 
     factoryOf(::NetworkApi)
+    factoryOf(::AppPreferencesDataStore)
     singleOf(::ChuckNorrisRepository)
     viewModelOf(::MainActivityViewModel)
 

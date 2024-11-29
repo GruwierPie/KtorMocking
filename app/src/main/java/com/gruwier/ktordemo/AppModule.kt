@@ -25,11 +25,10 @@ import io.ktor.http.contentType
 import io.ktor.http.headersOf
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.koin.android.ext.koin.androidContext
-import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
-import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -41,15 +40,14 @@ private enum class Engine {
 }
 
 val appModule = module {
-
-    factoryOf(::NetworkApi)
-    factoryOf(::AppPreferencesDataStore)
-    singleOf(::ChuckNorrisRepository)
     viewModelOf(::MainActivityViewModel)
+    singleOf(::ChuckNorrisRepository)
+    singleOf(::AppPreferencesDataStore)
+    singleOf(::NetworkApi)
 
     factory<HttpClient> {
-
-        if (false) {
+        val environment = runBlocking { get<AppPreferencesDataStore>().getEnvironment() }
+        if (environment == Environment.MOCKED) {
             get<HttpClient>(named(Engine.Mocked))
         } else {
             get<HttpClient>(qualifier = named(Engine.Network))
@@ -133,6 +131,13 @@ val appModule = module {
                         .bufferedReader()
                         .use { it.readText() }
                 } catch (_: Exception) {
+                    Log.e("","${httpRequestData.method.value.lowercase(Locale.ROOT)}_${
+                        httpRequestData.url.encodedPathAndQuery.removePrefix(
+                            "/"
+                        )
+                    }"
+                        .replace("/", ".") +
+                        ".json",)
                     null
                 }?.let { jsonResponse ->
                     respond(
@@ -164,6 +169,7 @@ val appModule = module {
                     Json {
                         prettyPrint = true
                         isLenient = true
+                        ignoreUnknownKeys = true
                     },
                 )
             }

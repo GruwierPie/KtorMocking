@@ -10,14 +10,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class MainActivityViewModel(
-    private val chuckNorrisRepository: ChuckNorrisRepository
+    private val chuckNorrisRepository: ChuckNorrisRepository,
+    private val appPreferencesDataStore: AppPreferencesDataStore
 ) : ViewModel() {
 
     private val _joke = MutableStateFlow<String?>(null)
     val joke = _joke.asStateFlow()
 
     val environment = MutableStateFlow<Environment>(
-        runBlocking { chuckNorrisRepository.getEnvironment() }
+        runBlocking { appPreferencesDataStore.getEnvironment() }
     )
 
     fun fetchJoke() {
@@ -29,7 +30,12 @@ class MainActivityViewModel(
 
     fun switchEnvironment() {
         viewModelScope.launch{
-            chuckNorrisRepository.setEnvironment()
+            appPreferencesDataStore.updateEnvironment(
+                when(environment.value){
+                    Environment.PROD -> Environment.MOCKED
+                    Environment.MOCKED -> Environment.PROD
+                }
+            )
             throw IllegalStateException()
         }
     }
